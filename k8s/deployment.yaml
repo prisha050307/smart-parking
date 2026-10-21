@@ -1,0 +1,78 @@
+# A Deployment says: "keep N copies (pods) of this container running."
+# Three Deployments: MongoDB, backend, frontend.
+
+# ---------- MongoDB ----------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:7
+          ports:
+            - containerPort: 27017
+          # No permanent volume: data is lost if this pod is deleted. Fine for a demo.
+---
+# ---------- Backend ----------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 2            # two copies of the backend
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: smart-parking-backend:1.0
+          imagePullPolicy: IfNotPresent   # use the image built on this PC
+          ports:
+            - containerPort: 5000
+          env:
+            - name: PORT
+              value: "5000"
+            - name: MONGO_URI
+              value: mongodb://mongo:27017/smart-parking
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: smart-parking-secret
+                  key: JWT_SECRET
+---
+# ---------- Frontend ----------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: smart-parking-frontend:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80

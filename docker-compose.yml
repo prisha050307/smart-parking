@@ -1,0 +1,25 @@
+# Starts the whole project (database + backend + frontend) with one command
+services:
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo-data:/data/db        # keeps your data when containers restart
+
+  backend:
+    build: ./backend
+    environment:
+      PORT: 5000
+      MONGO_URI: mongodb://mongo:27017/smart-parking   # "mongo" is the service name above
+      JWT_SECRET: change_this_secret_before_demo
+    depends_on:
+      - mongo
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"                  # open http://localhost:3000
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:
