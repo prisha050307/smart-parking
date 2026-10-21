@@ -1,6 +1,6 @@
 // api.js - the ONLY file that talks to the backend
 
-const BASE_URL = "/api";
+const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 async function request(path, options = {}) {
   const token = localStorage.getItem("token");
